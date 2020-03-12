@@ -29,11 +29,17 @@ if (x > room_width - global.player_w) { //right wall collision
     x_spd = -1 * x_spd;
 }
 #endregion
-
+if (place_empty(x, bbox_bottom, obj_solids)) { standing = false;}
 #region Y MOVEMENT + BOUNCING
-y_spd += grav; //gravity pulling down player
 var new_y; //new y pos
-
+                    if (keyboard_check_pressed(jumpkey)) {
+						standing = false;
+                        y_spd = jump_spd;
+                        //audio_play_sound(boing, 1, false);
+                    }
+if (!standing) {
+    y_spd += grav; //gravity pulling down player
+}
 if (y_spd > 0) { //if yspeed > 0, player is going down
     image_index = 1; //show moving down sprite
     for (var dist_moved = 0; dist_moved < y_spd; dist_moved++) { //y speed is threshold for distance moved
@@ -47,26 +53,28 @@ if (y_spd > 0) { //if yspeed > 0, player is going down
                 y_spd = 0; //stop moving for now
                 y += 1; //move one pixel outside the launcher (to stop triggering collision)
                 x = random_range(0 + sprite_width, room_width - sprite_width);
-            } else{ //all other bounces
+            } else { //all other bounces
                 if (place_meeting(x, y, collidewith) == false && ko == false) { //he is now above so he can bouce
-                     if (keyboard_check(vk_space)) {
-					y_spd = jump_spd; //BOUCE
-                    image_index = 0; //show moving up sprite 
-					 } else {y_spd = 0;}
-					
+
+
+
                     if (collidewith.object_index == obj_platform) { //if he bouce on platform
-                        audio_play_sound(boing, 1, false);
-                        if (collidewith.delete_me_in == 0) { //tell the platform to delete itself in 10 frames
-                            collidewith.delete_me_in = 100; //set delete timer
-                        }
+                        y_spd = 0;
+                        standing = true;
+                        collidewith.delete = true;
+                    } else {
+						standing = false;
+                        y_spd = jump_spd; //BOUCE
+                        image_index = 0; //show moving up sprite 
                     }
+
+
                     break; //stop loop (stop changing new_y after a condition is met)
                 }
             }
         }
     }
-}
-else { //no collision
+} else { //no collision
     new_y = y + y_spd; //move y normally
 }
 y = new_y; //always set ypos to new y
@@ -82,7 +90,7 @@ if (launch) { //when launch is true, initiate LAUNCH TIMER
     y_spd = 0; //don't move
     launchtime++; //start counting up
     if (launchtime == 100) { //when the timer is complete
-        audio_play_sound(revive, 1, false);
+        //audio_play_sound(revive, 1, false);
         y_spd = jump_spd * 1.75; //bounce HIGH
         launchtime = 0; //reset the timer
         launch = false; //no more launching
@@ -102,8 +110,8 @@ with(obj_blorb) { //acting as BLORB
             obj_blarb.ko = true; //blarb loses control
             show_debug_message("BLARBY DIED")
             points++; //add to his points
-			camera.shake = 0; //reset shake intensity before starting new camera shake
-			camera.camshake = true; //start new camera shake
+            camera.shake = 0; //reset shake intensity before starting new camera shake
+            camera.camshake = true; //start new camera shake
         }
     }
 }
@@ -119,28 +127,18 @@ with(obj_blarb) { //acting as BLARB
             obj_blorb.ko = true;
             show_debug_message("BLORBY DIED")
             points++;
-			camera.shake = 0;
-camera.camshake = true;
+            camera.shake = 0;
+            camera.camshake = true;
         }
     }
 }
 #endregion
 
 #region FALLING OFF
-with(obj_blorb) {
-    if (y >= room_height && y_spd > 0 && !dead) { //if he is below room, hasn't died yet, and is going down
-        instance_create_layer(x, room_height, "Instances", obj_ink); //make an ink where he died
-        audio_play_sound(fall, 1, false);
-        points--;
-        dead = true; //he is dead
-    }
-}
-with(obj_blarb) {
-    if (y >= room_height && y_spd > 0 && !dead) {
-        instance_create_layer(x, room_height, "Instances", obj_ink);
-        audio_play_sound(fall, 1, false);
-        points--;
-        dead = true;
-    }
+if (y >= room_height && y_spd > 0 && !dead) {
+    instance_create_layer(x, room_height, "Instances", obj_ink);
+    //audio_play_sound(fall, 1, false);
+    points--;
+    dead = true;
 }
 #endregion
