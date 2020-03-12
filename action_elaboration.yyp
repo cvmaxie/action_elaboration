@@ -71,6 +71,14 @@
             }
         },
         {
+            "Key": "1d713db6-398c-44b5-9551-cf2c11a210f3",
+            "Value": {
+                "id": "27274a8b-fac1-41e7-bcd0-263150dc4dfe",
+                "resourcePath": "views\\1d713db6-398c-44b5-9551-cf2c11a210f3.yy",
+                "resourceType": "GMFolder"
+            }
+        },
+        {
             "Key": "1ffbacc8-0821-4f59-8681-28e05666908c",
             "Value": {
                 "id": "2f6cfff3-d738-4b54-9517-192204713452",
@@ -388,6 +396,14 @@
                 "id": "30b081ed-360b-4790-ac30-7d3c1c994452",
                 "resourcePath": "options\/android\/options_android.yy",
                 "resourceType": "GMAndroidOptions"
+            }
+        },
+        {
+            "Key": "e7750a89-2d3f-4db1-a178-725741ab0b9b",
+            "Value": {
+                "id": "2dd1faad-160c-4645-91d3-105f87c96b82",
+                "resourcePath": "sprites\\mask\\mask.yy",
+                "resourceType": "GMSprite"
             }
         },
         {

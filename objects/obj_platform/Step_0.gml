@@ -2,8 +2,10 @@
 //DELETING PLATFORMS
 //delete_me_in gets set to a positive number when the player bounces on platform
 if (delete_me_in > 0) { //set a latency timer for deleting collided platform
+	if (delete_me_in < 50) {
     image_index = 4;
     image_speed = framerate;
+	}
     if (image_index > 5) {
         image_speed = 0;
     }

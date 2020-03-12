@@ -33,6 +33,7 @@ if (x > room_width - global.player_w) { //right wall collision
 #region Y MOVEMENT + BOUNCING
 y_spd += grav; //gravity pulling down player
 var new_y; //new y pos
+
 if (y_spd > 0) { //if yspeed > 0, player is going down
     image_index = 1; //show moving down sprite
     for (var dist_moved = 0; dist_moved < y_spd; dist_moved++) { //y speed is threshold for distance moved
@@ -46,14 +47,17 @@ if (y_spd > 0) { //if yspeed > 0, player is going down
                 y_spd = 0; //stop moving for now
                 y += 1; //move one pixel outside the launcher (to stop triggering collision)
                 x = random_range(0 + sprite_width, room_width - sprite_width);
-            } else { //all other bounces
+            } else{ //all other bounces
                 if (place_meeting(x, y, collidewith) == false && ko == false) { //he is now above so he can bouce
-                    y_spd = jump_spd; //BOUCE
-                    image_index = 0; //show moving up sprite
+                     if (keyboard_check(vk_space)) {
+					y_spd = jump_spd; //BOUCE
+                    image_index = 0; //show moving up sprite 
+					 } else {y_spd = 0;}
+					
                     if (collidewith.object_index == obj_platform) { //if he bouce on platform
                         audio_play_sound(boing, 1, false);
                         if (collidewith.delete_me_in == 0) { //tell the platform to delete itself in 10 frames
-                            collidewith.delete_me_in = 10; //set delete timer
+                            collidewith.delete_me_in = 100; //set delete timer
                         }
                     }
                     break; //stop loop (stop changing new_y after a condition is met)
@@ -61,7 +65,8 @@ if (y_spd > 0) { //if yspeed > 0, player is going down
             }
         }
     }
-} else { //no collision
+}
+else { //no collision
     new_y = y + y_spd; //move y normally
 }
 y = new_y; //always set ypos to new y
