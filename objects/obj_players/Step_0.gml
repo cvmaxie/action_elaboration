@@ -29,15 +29,17 @@ if (x > room_width - global.player_w) { //right wall collision
     x_spd = -1 * x_spd;
 }
 #endregion
-if (place_empty(x, bbox_bottom, obj_solids)) { standing = false;}
+if (place_empty(x, bbox_bottom, obj_solids)) {
+    standing = false;
+}
 #region Y MOVEMENT + BOUNCING
 var new_y; //new y pos
-                    if (keyboard_check_pressed(jumpkey)) {
-						standing = false;
-                        y_spd = jump_spd;
-                        //audio_play_sound(boing, 1, false);
-                    }
-if (!standing) {
+if (keyboard_check_pressed(jumpkey) && standing) { //if on a surface to jump off
+    standing = false;
+    y_spd = jump_spd;
+    //audio_play_sound(boing, 1, false);
+}
+if (!standing) { //if not on a surface to counter gravity
     y_spd += grav; //gravity pulling down player
 }
 if (y_spd > 0) { //if yspeed > 0, player is going down
@@ -55,20 +57,17 @@ if (y_spd > 0) { //if yspeed > 0, player is going down
                 x = random_range(0 + sprite_width, room_width - sprite_width);
             } else { //all other bounces
                 if (place_meeting(x, y, collidewith) == false && ko == false) { //he is now above so he can bouce
-
-
-
                     if (collidewith.object_index == obj_platform) { //if he bouce on platform
                         y_spd = 0;
                         standing = true;
-                        collidewith.delete = true;
+                        if (collidewith.delete_me_in == 0) { //tell the platform to delete itself in 10 frames
+                           // collidewith.delete_me_in = 30; //set delete timer
+                        }
                     } else {
-						standing = false;
+                        standing = false;
                         y_spd = jump_spd; //BOUCE
                         image_index = 0; //show moving up sprite 
                     }
-
-
                     break; //stop loop (stop changing new_y after a condition is met)
                 }
             }
@@ -77,6 +76,18 @@ if (y_spd > 0) { //if yspeed > 0, player is going down
 } else { //no collision
     new_y = y + y_spd; //move y normally
 }
+
+			if (standing) {
+				if (x_spd > .1 || x_spd < -.1) {
+		image_speed = 1//abs(x_spd);
+		if (image_index > 4) {
+		image_index = 1;
+		}
+				} else {image_index = 3}
+		} else {image_speed = 0
+			image_index = 0;
+			}
+
 y = new_y; //always set ypos to new y
 
 if (y <= sprite_height) { // keep them from going over top of screen
@@ -101,7 +112,7 @@ if (launch) { //when launch is true, initiate LAUNCH TIMER
 #region PLAYER K.O.
 with(obj_blorb) { //acting as BLORB
     if (ko) {
-        image_index = 2;
+        image_index = 6;
     }
     if (place_meeting(x, y, obj_blarb) && !ko) { //colliding with blarb
         if (bbox_bottom <= obj_blarb.bbox_top && !obj_blarb.ko) { //if blorb's butt is above blarb's head and hes still alive
@@ -118,7 +129,7 @@ with(obj_blorb) { //acting as BLORB
 
 with(obj_blarb) { //acting as BLARB
     if (ko) {
-        image_index = 2;
+        image_index = 6;
     }
     if (place_meeting(x, y, obj_blorb) && !ko) { //colliding with blorb
         if (bbox_bottom <= obj_blorb.bbox_top && !obj_blorb.ko) {

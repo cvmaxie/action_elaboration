@@ -10,7 +10,7 @@ padding = 3; //extra space between platforms
 spawndelay = 60; //how long the spawn delay should be for the platforms
 platnum = instance_number(obj_platform); //number that will check how many platforms there are at any time
 //GROWTH
-framerate = 30; //platform framerate
+framerate = 10; //platform framerate
 grow_timer = 200;
 #endregion
 

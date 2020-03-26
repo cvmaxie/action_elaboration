@@ -2,16 +2,16 @@
 //DELETING PLATFORMS
 //delete_me_in gets set to a positive number when the player bounces on platform
 if (delete_me_in > 0) { //set a latency timer for deleting collided platform
-    image_index = 4;
     image_speed = framerate;
+	    delete_me_in -= 1; //count down each frame
     if (image_index > 5) {
         image_speed = 0;
     }
-    delete_me_in -= 1; //count down each frame
     if (delete_me_in == 0) { //when timer is complete
         instance_destroy(); //destroy platform
     }
 }
+
 
 //GROWING AND CHANGING PLATFORM SPRITE
 if (grow_in > 0) { //if the grow timer isn't done
@@ -37,6 +37,6 @@ if (grow_in == 0) { //when the grow timer is done
 }
 
 //PLAYING PLATFORM ANIMATION W/O LOOP
-if (image_index > 2) {
+if (image_index > 2 && delete_me_in == 0) {
     image_speed = 0;
 }
