@@ -1,50 +1,42 @@
-/// @camera behavior
-//keep in mind that camera origin is in the top left corner
-x = 0; //camera is width of screen, x pos will always stay the same
-cutoff = room_height * .66 //cutoff point - camera favors higher player
-//Y POSITION
-var cheight = camera_get_view_height(view_camera[0]); //get height of camera
-//average between players
-if (obj_blorb.y >= obj_blarb.y) { //if player 2 is higher
-    if (obj_blorb.y >= cutoff) { //at a certain point, don't follow the lower player
-        y = lerp(cutoff, obj_blarb.y, .5); //lerp between higher player and cutoff point
+#region CAMERA SHAKE
+var players = instance_number(obj_players); //average y position between plagers
+var ypos = 0;
+for (i = 0; i < players; i++) {
+    var thisplayer = instance_find(obj_players, i);
+    if (!thisplayer.ko) {
+        ypos += thisplayer.y - 0.5 * cheight; //center alive players
     } else {
-        y = lerp(obj_blorb.y, obj_blarb.y, .5); //cam is below p2 and above p1
-    }
-    if (camshake) {
-        y = lerp(obj_blorb.y, obj_blarb.y, .5) - shake;
-    }
-} else if (obj_blarb.y > obj_blorb.y) { //if player 1 is higher
-    if (obj_blarb.y >= cutoff) {
-        y = lerp(cutoff, obj_blorb.y, .5);
-    } else {
-        y = lerp(obj_blarb.y, obj_blorb.y, .5); //cam is below p1 and above p2
-    }
-    if (camshake) {
-        y = lerp(obj_blarb.y, obj_blorb.y, .5) - shake;
+        ypos += room_height - cheight; //register dead players as bottom of room
     }
 }
-
-if (y > room_height - cheight / 2) { //if camera touches bottom
-    y = room_height - cheight / 2; //don't go below the room
+if (players > 0) {
+    ypos /= players; //divide averager by # of players
 }
+x = 0;
+y = lerp(y, ypos, 0.4); //lerp for smooth movement
 
-camera_y = y - cheight / 2; //camera's position is offset from this object
-camera_set_view_pos(view_camera[0], 0, camera_y); //set engine's camera to follow this object
+cam_y = camera_get_view_y(view_camera[0]); //spring camera to target using the spring formula
+cam_vel_y += 0.05 * (y - cam_y);
+cam_vel_y *= 0.8
+cam_y += cam_vel_y;
 
-#region KO SHAKE
-show_debug_message(shake);
-if (camshake && !goback) { //if camshake (happens when a player gets ko'ed)
-    shake += 1.5; //add 1 to "shake intensity"
-    if (shake >= 25) { //when the "shake intensity" is > 25
-        goback = true; //start subtracting from shake intensity
-    }
-}
-if (goback) { //subtracting from shake intensity
-    shake -= 1.5;
-    if (shake <= 0) { //if subtracting from shake intensity is done
-        camshake = false; //no more shaking
-        goback = false; //no more going back
+cam_y = max(cam_y, 0);//clamp position to room boundaries
+cam_y = min(cam_y, room_height - cheight);
+
+//set the position of the camera
+camera_set_view_pos(view_camera[0], x, cam_y);
+#endregion
+
+#region CAMERA SHAKE
+with(obj_players) {
+    if (alarm[0] > 0) { //shaking the screen using Alarm0
+        var camx = camera_get_view_x(view_camera[0]); //get old position
+        var camy = camera_get_view_y(view_camera[0]);
+
+        var newx = camx + irandom_range(-alarm[0] * 2, alarm[0] * 2); //create new position using alarm
+        var newy = camy + irandom_range(-alarm[0] * 2, alarm[0] * 2);
+
+        camera_set_view_pos(view_camera[0], newx, newy); //set new position using alarm
     }
 }
 #endregion

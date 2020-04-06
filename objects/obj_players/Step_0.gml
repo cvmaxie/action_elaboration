@@ -1,3 +1,5 @@
+show_debug_message(jump_spd);
+
 image_speed = 0; //never animate player automatically - code will change the sprite
 if (keyboard_check_pressed(ord("R"))) room_restart(); //press R to restart
 
@@ -34,10 +36,13 @@ if (place_empty(x, bbox_bottom, obj_solids)) {
 }
 #region Y MOVEMENT + BOUNCING
 var new_y; //new y pos
-if (keyboard_check_pressed(jumpkey) && standing) { //if on a surface to jump off
+if (keyboard_check_released(jumpkey) && standing) { //jump on release
+    if (image_index > 5) {
+        image_index = 0;
+    }
     standing = false;
     y_spd = jump_spd;
-    //audio_play_sound(boing, 1, false);
+    audio_play_sound(boing, 1, false);
 }
 if (!standing) { //if not on a surface to counter gravity
     y_spd += grav; //gravity pulling down player
@@ -55,43 +60,82 @@ if (y_spd > 0) { //if yspeed > 0, player is going down
                 y_spd = 0; //stop moving for now
                 y += 1; //move one pixel outside the launcher (to stop triggering collision)
                 x = random_range(0 + sprite_width, room_width - sprite_width);
-            } else { //all other bounces
-                if (place_meeting(x, y, collidewith) == false && ko == false) { //he is now above so he can bouce
+            } else if (!ko) { //all other bounces
+                if (place_meeting(x, y, obj_platform) == false) { //he is now above so he can bouce
                     if (collidewith.object_index == obj_platform) { //if he bouce on platform
                         y_spd = 0;
                         standing = true;
+                        squish = true;
                         if (collidewith.delete_me_in == 0) { //tell the platform to delete itself in 10 frames
-                           // collidewith.delete_me_in = 30; //set delete timer
+                            collidewith.delete_me_in = 125; //set delete timer
                         }
-                    } else {
+                    } else if (bbox_bottom <= collidewith.bbox_top && !collidewith.ko && collidewith.y_spd >= 0) { //if he is bouncing on TOP of him
+                        instance_create_layer(collidewith.x, collidewith.y, "Instances", obj_ink); //ink death graphic
+                        collidewith.image_index = 6; //ko sprite
+                        audio_play_sound(kosound, 1, false);
+                        collidewith.ko = true; //he has been knocked out
+                        collidewith.standing = false; //he cannot stand on platforms
+                        show_debug_message("HE DIED")
+                        points++; //add points to this blorby
+                        collidewith.points--; //subtract points from dead blorby
+                        alarm[0] = 10; //shake the screen using the alarm
+                        sleep(80); //freeze the screen
+                    } else if (y < room_height && bbox_bottom <= collidewith.bbox_top) {
                         standing = false;
                         y_spd = jump_spd; //BOUCE
                         image_index = 0; //show moving up sprite 
                     }
-                    break; //stop loop (stop changing new_y after a condition is met)
+                    break;
                 }
             }
         }
     }
-} else { //no collision
+} else { //no collision, going up
     new_y = y + y_spd; //move y normally
 }
-
-			if (standing) {
-				if (x_spd > .1 || x_spd < -.1) {
-		image_speed = 1//abs(x_spd);
-		if (image_index > 4) {
-		image_index = 1;
-		}
-				} else {image_index = 3}
-		} else {image_speed = 0
-			image_index = 0;
-			}
-
 y = new_y; //always set ypos to new y
-
 if (y <= sprite_height) { // keep them from going over top of screen
-    y = sprite_height + 1;
+    y = sprite_height;
+}
+#endregion
+
+#region SPRITE ANIMATION + JUMP SPEED
+if (standing) {
+    if (keyboard_check(jumpkey) && !squish) { //if on a surface to jump off
+        image_speed = 1;
+        jump_spd += charge;
+        //create charging particle
+        part_emitter_region(charging, sparkling, x - 10, x + 10, y, y + 10, ps_shape_ellipse, ps_distr_gaussian);
+        part_emitter_burst(charging, sparkling, sparks, 2); //stream 5 particles every second
+        if (image_index > 5) {
+            image_speed = 0;
+        }
+    } else {
+        if (!squish && image_index <= 3 && abs(x_spd) > .1) { //if not squishing and moving sideways
+            if (keyboard_check(left_control) || keyboard_check(right_control)) { //walking left or right
+                image_speed = .5;
+                if (image_index == 3 && alarm[1] == -1) {
+                    image_speed = 0;
+                    alarm[1] = 7;
+                }
+            }
+        } else if (squish) { //squish when landing on platform
+            jump_spd = default_jump; //reset jump speed upon landing
+            image_speed = 1;
+            if (image_index > 3) {
+                image_speed = 0;
+                squish = false; //stop animation
+            }
+        } else { //standing on platform, no interactivity
+            image_speed = 0;
+            image_index = 3;
+        }
+    }
+} else { //falling, no interactivity
+    image_speed = 0
+    if (y_spd > 0) {
+        image_index = 1;
+    }
 }
 #endregion
 
@@ -101,46 +145,11 @@ if (launch) { //when launch is true, initiate LAUNCH TIMER
     y_spd = 0; //don't move
     launchtime++; //start counting up
     if (launchtime == 100) { //when the timer is complete
-        //audio_play_sound(revive, 1, false);
-        y_spd = jump_spd * 1.75; //bounce HIGH
+        audio_play_sound(revive, 1, false);
+        jump_spd = default_jump; //reset jump speed
+        y_spd = jump_spd * 2.5; //bounce HIGH
         launchtime = 0; //reset the timer
         launch = false; //no more launching
-    }
-}
-#endregion
-
-#region PLAYER K.O.
-with(obj_blorb) { //acting as BLORB
-    if (ko) {
-        image_index = 6;
-    }
-    if (place_meeting(x, y, obj_blarb) && !ko) { //colliding with blarb
-        if (bbox_bottom <= obj_blarb.bbox_top && !obj_blarb.ko) { //if blorb's butt is above blarb's head and hes still alive
-            instance_create_layer(obj_blarb.x, obj_blarb.y, "Instances", obj_ink); //make an ink where blarb died
-            audio_play_sound(kosound, 1, false);;
-            obj_blarb.ko = true; //blarb loses control
-            show_debug_message("BLARBY DIED")
-            points++; //add to his points
-            camera.shake = 0; //reset shake intensity before starting new camera shake
-            camera.camshake = true; //start new camera shake
-        }
-    }
-}
-
-with(obj_blarb) { //acting as BLARB
-    if (ko) {
-        image_index = 6;
-    }
-    if (place_meeting(x, y, obj_blorb) && !ko) { //colliding with blorb
-        if (bbox_bottom <= obj_blorb.bbox_top && !obj_blorb.ko) {
-            instance_create_layer(obj_blorb.x, obj_blorb.y, "Instances", obj_ink);
-            audio_play_sound(kosound, 1, false);
-            obj_blorb.ko = true;
-            show_debug_message("BLORBY DIED")
-            points++;
-            camera.shake = 0;
-            camera.camshake = true;
-        }
     }
 }
 #endregion
@@ -148,8 +157,9 @@ with(obj_blarb) { //acting as BLARB
 #region FALLING OFF
 if (y >= room_height && y_spd > 0 && !dead) {
     instance_create_layer(x, room_height, "Instances", obj_ink);
-    //audio_play_sound(fall, 1, false);
+    audio_play_sound(fall, 1, false);
     points--;
+    jump_spd = default_jump; //reset jump speed
     dead = true;
 }
 #endregion
