@@ -31,7 +31,7 @@ if (x > room_width - global.player_w) { //right wall collision
     x_spd = -1 * x_spd;
 }
 #endregion
-if (place_empty(x, bbox_bottom, obj_solids)) {
+if (!place_meeting(x, bbox_bottom, obj_solids)) {
     standing = false;
 }
 #region Y MOVEMENT + BOUNCING
