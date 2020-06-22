@@ -1,4 +1,5 @@
 # action_elaboration
 (Made for my Intro to Game Development class at NYU)\
-Simple game prototype with platformer mechanics\
-(screenshots coming at some point in our existence on this earth)
+Simple multiplayer game prototype with platformer mechanics\
+<a href = "https://cvmaxie.itch.io/blorby-blarby">Click to Play in Browser</a> \
+<img src="itchcover.png" width="60%">
